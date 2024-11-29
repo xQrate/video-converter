@@ -1,16 +1,25 @@
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from moviepy import *
+from moviepy import VideoFileClip  # Убедитесь, что импортируете из moviepy.editor
 import threading
+from PIL import Image, ImageTk  # Импортируем Pillow для работы с изображениями
 
 def convert_video_to_audio(video_file, audio_file):
     """Конвертирует видеофайл в аудиофайл."""
-    video_clip = VideoFileClip(video_file)
-    audio_clip = video_clip.audio
-    audio_clip.write_audiofile(audio_file)
-    audio_clip.close()
-    video_clip.close()
+    try:
+        print(f"Открываем видеофайл: {video_file}")  # Отладочное сообщение
+        with VideoFileClip(video_file) as video_clip:
+            print("Проверяем наличие аудиодорожки...")
+            audio_clip = video_clip.audio
+            if audio_clip is None:
+                raise ValueError("Аудиодорожка не найдена в видеофайле.")
+            print("Аудиодорожка найдена, начинаем запись...")
+            audio_clip.write_audiofile(audio_file)
+            print(f"Аудиофайл успешно сохранен как: {audio_file}")
+    except Exception as e:
+        print(f"Ошибка при конвертации: {e}")  # Отладочное сообщение
+        raise RuntimeError(f"Ошибка при конвертации: {e}")
 
 def select_video_file():
     """Открывает диалог для выбора видеофайла."""
@@ -65,23 +74,37 @@ def run_conversion(video_path, audio_path):
 # Создаем главное окно
 root = tk.Tk()
 root.title("Конвертер видео в аудио")
+root.geometry("420x300")  # Устанавливаем размер окна
+root.resizable(False, False)  # Запрещаем изменение размера окна
+
+# Загружаем изображение для фона
+background_image = Image.open("1480885740_OcIY8JbtAI4.jpg")  # Замените на путь к вашему изображению
+background_image = background_image.resize((420, 300), Image.LANCZOS)  # Используем LANCZOS вместо ANTIALIAS
+background_photo = ImageTk.PhotoImage(background_image)
+
+# Создаем Label для фона
+background_label = tk.Label(root, image=background_photo)
+background_label.place(relwidth=1, relheight=1)  # Заполняем весь экран
 
 # Поле для выбора видеофайла
-video_label = tk.Label(root, text="Выберите видеофайл:")
+video_label = tk.Label(root, text="Выберите видеофайл:", bg='#5e14a8', fg='white', font=('Arial', 12))
 video_label.pack(pady=5)
 
-video_entry = tk.Entry(root, width=50)
+video_entry = tk.Entry(root, width=40, font=('Arial', 12))
 video_entry.pack(pady=5)
 
-video_button = tk.Button(root, text="Обзор", command=select_video_file)
+# Кнопка "Обзор"
+video_button = tk.Button(root, text="Обзор", command=select_video_file, font=('Arial', 12), 
+                         bg='#5e14a8', fg='white', width=10)
 video_button.pack(pady=5)
 
 # Метка для анимации загрузки
-loading_label = tk.Label(root, text="")
+loading_label = tk.Label(root, text="", bg='white', font=('Arial', 12))
 loading_label.pack_forget()  # Скрываем метку изначально
 
 # Кнопка для запуска конвертации
-convert_button = tk.Button(root, text="Конвертировать", command=convert)
+convert_button = tk.Button(root, text="Конвертировать", command=convert, font=('Arial', 12), 
+                           bg='#5e14a8', fg='white', width=15)
 convert_button.pack(pady=20)
 
 # Запускаем главный цикл приложения
